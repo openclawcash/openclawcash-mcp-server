@@ -25,6 +25,7 @@ jobs:
           pkg="v$(node -p "require('./package.json').version")"
           [ "$pkg" = "$GITHUB_REF_NAME" ] || { echo "tag $GITHUB_REF_NAME does not match package.json $pkg"; exit 1; }
           grep -q "const SERVER_VERSION = \"${pkg#v}\";" openclawcash-mcp.mjs || { echo "SERVER_VERSION in openclawcash-mcp.mjs does not match $pkg"; exit 1; }
+          if grep -o "@openclawcash/mcp-server@[0-9][0-9.]*" README.md | grep -v "@${pkg#v}$"; then echo "README pins a version other than ${pkg#v}"; exit 1; fi
       - run: node --check openclawcash-mcp.mjs
       - run: node openclawcash-mcp.mjs --self-test
         env:

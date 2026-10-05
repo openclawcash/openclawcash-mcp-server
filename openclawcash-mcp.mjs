@@ -7,7 +7,7 @@ import { fileURLToPath } from "node:url";
 import { z } from "zod";
 
 const SERVER_NAME = "openclawcash";
-const SERVER_VERSION = "0.1.26";
+const SERVER_VERSION = "0.1.27";
 
 // Mirrors the API contract: "*" covers escrow events only, wallet events must be
 // named, and a subscription with no event types receives nothing.
@@ -21,6 +21,8 @@ const __dirname = path.dirname(__filename);
 const packageRoot = __dirname;
 const cwd = process.cwd();
 const PACKAGE_NAME = "@openclawcash/mcp-server";
+// Printed install commands pin the exact version, so a later release never runs unreviewed.
+const PINNED_PACKAGE = `${PACKAGE_NAME}@${SERVER_VERSION}`;
 
 const envFileCandidates = [
   path.join(packageRoot, ".env"),
@@ -1889,7 +1891,7 @@ function printHelp() {
     "OpenClawCash MCP Server",
     "",
     "Run as stdio MCP server:",
-    `  npx -y ${PACKAGE_NAME}`,
+    `  npx -y ${PINNED_PACKAGE}`,
     "",
     "Optional flags:",
     "  --help                  Show this help",
@@ -1916,7 +1918,7 @@ function printClaudeConfig() {
     mcpServers: {
       openclawcash: {
         command: "npx",
-        args: ["-y", PACKAGE_NAME],
+        args: ["-y", PINNED_PACKAGE],
         env: {
           OPENCLAWCASH_AGENT_KEY: "occ_your_api_key_here",
           OPENCLAWCASH_BASE_URL: DEFAULT_BASE_URL,
@@ -1932,7 +1934,7 @@ function printCursorConfig() {
     mcpServers: {
       openclawcash: {
         command: "npx",
-        args: ["-y", PACKAGE_NAME],
+        args: ["-y", PINNED_PACKAGE],
         env: {
           OPENCLAWCASH_AGENT_KEY: "occ_your_api_key_here",
           OPENCLAWCASH_BASE_URL: DEFAULT_BASE_URL,
@@ -1948,7 +1950,7 @@ function printVSCodeConfig() {
     mcpServers: {
       openclawcash: {
         command: "npx",
-        args: ["-y", PACKAGE_NAME],
+        args: ["-y", PINNED_PACKAGE],
         env: {
           OPENCLAWCASH_AGENT_KEY: "occ_your_api_key_here",
           OPENCLAWCASH_BASE_URL: DEFAULT_BASE_URL,
@@ -1964,7 +1966,7 @@ function printOpenClawConfig() {
     mcpServers: {
       openclawcash: {
         command: "npx",
-        args: ["-y", PACKAGE_NAME],
+        args: ["-y", PINNED_PACKAGE],
         env: {
           OPENCLAWCASH_AGENT_KEY: "occ_your_api_key_here",
           OPENCLAWCASH_BASE_URL: DEFAULT_BASE_URL,

@@ -1,6 +1,6 @@
 {
   "name": "@openclawcash/mcp-server",
-  "version": "0.1.26",
+  "version": "0.1.27",
   "description": "OpenClawCash MCP server for managed agent wallets, balances, transfers, swaps, approvals, governance policy checks, cross-chain bridges, Escrow (formerly Get Paid) checkout flows, Polymarket market resolution/order tools, and YieldWolf Casino link/unlink/proxy tools.",
   "type": "module",
   "license": "Proprietary",
