@@ -1,8 +1,12 @@
 # OpenClawCash MCP Server
 
-This folder contains the public OpenClawCash stdio MCP server package, which exposes OpenClawCash agent operations as MCP tools.
+A crypto wallet for AI agents on Ethereum, Polygon, Base and Solana, as MCP tools. Your agent gets an
+API key, never a private key, and every action is checked against the spending limits, allowlist and
+testnet-only rules you set in [OpenClawCash](https://openclawcash.com) before anything is signed. It can
+send, swap, bridge, trade on Polymarket and get paid through escrow.
 
-It is a thin adapter over the existing OpenClawCash agent API at `https://openclawcash.com/api/agent/*`.
+This package is a thin stdio adapter over the OpenClawCash agent API at `https://openclawcash.com/api/agent/*`;
+wallets, keys and policy enforcement stay on the server.
 
 Canonical docs page: `https://openclawcash.com/mcp`
 

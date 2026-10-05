@@ -1,7 +1,7 @@
 {
   "name": "@openclawcash/mcp-server",
   "version": "0.1.27",
-  "description": "OpenClawCash MCP server for managed agent wallets, balances, transfers, swaps, approvals, governance policy checks, cross-chain bridges, Escrow (formerly Get Paid) checkout flows, Polymarket market resolution/order tools, and YieldWolf Casino link/unlink/proxy tools.",
+  "description": "Crypto wallet for AI agents as MCP tools: Ethereum, Polygon, Base and Solana. The agent gets an API key, never a private key, and your spending limits and allowlist are checked before anything is signed. Send, swap, bridge, Polymarket and escrow payments.",
   "type": "module",
   "license": "Proprietary",
   "homepage": "https://openclawcash.com/mcp",
