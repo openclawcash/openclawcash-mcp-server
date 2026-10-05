@@ -1,0 +1,50 @@
+{
+  "name": "@openclawcash/mcp-server",
+  "version": "0.1.26",
+  "description": "OpenClawCash MCP server for managed agent wallets, balances, transfers, swaps, approvals, governance policy checks, cross-chain bridges, Escrow (formerly Get Paid) checkout flows, Polymarket market resolution/order tools, and YieldWolf Casino link/unlink/proxy tools.",
+  "type": "module",
+  "license": "Proprietary",
+  "homepage": "https://openclawcash.com/mcp",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/openclawcash/openclawcash-mcp-server.git"
+  },
+  "bugs": {
+    "url": "https://openclawcash.com/mcp"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "author": "OpenClawCash",
+  "bin": {
+    "openclawcash-mcp": "bin/openclawcash-mcp.js"
+  },
+  "files": [
+    "bin/openclawcash-mcp.js",
+    "openclawcash-mcp.mjs",
+    "README.md",
+    ".env.example"
+  ],
+  "keywords": [
+    "mcp",
+    "model-context-protocol",
+    "openclawcash",
+    "crypto",
+    "wallet",
+    "agents"
+  ],
+  "engines": {
+    "node": ">=20"
+  },
+  "dependencies": {
+    "zod": "^3.24.2"
+  },
+  "scripts": {
+    "start": "node ./openclawcash-mcp.mjs",
+    "self-test": "node ./openclawcash-mcp.mjs --self-test",
+    "print:openclaw": "node ./openclawcash-mcp.mjs --print-openclaw-config",
+    "print:claude": "node ./openclawcash-mcp.mjs --print-claude-config",
+    "print:cursor": "node ./openclawcash-mcp.mjs --print-cursor-config",
+    "print:vscode": "node ./openclawcash-mcp.mjs --print-vscode-config"
+  }
+}

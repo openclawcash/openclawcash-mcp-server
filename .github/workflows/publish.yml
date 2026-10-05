@@ -1,0 +1,34 @@
+# Publishes @openclawcash/mcp-server to npm when a version tag (v1.2.3) is pushed.
+# Uses npm trusted publishing (OIDC): no npm token is stored anywhere. The npm
+# package must list this repo + workflow under Settings -> Trusted Publisher.
+name: publish
+
+on:
+  push:
+    tags: ["v*"]
+
+permissions:
+  contents: read
+  id-token: write
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+      - run: npm ci
+      - name: Tag matches package.json version
+        run: |
+          pkg="v$(node -p "require('./package.json').version")"
+          [ "$pkg" = "$GITHUB_REF_NAME" ] || { echo "tag $GITHUB_REF_NAME does not match package.json $pkg"; exit 1; }
+          grep -q "const SERVER_VERSION = \"${pkg#v}\";" openclawcash-mcp.mjs || { echo "SERVER_VERSION in openclawcash-mcp.mjs does not match $pkg"; exit 1; }
+      - run: node --check openclawcash-mcp.mjs
+      - run: node openclawcash-mcp.mjs --self-test
+        env:
+          OPENCLAWCASH_AGENT_KEY: occ_self_test_placeholder
+      - run: npm --version
+      # --loglevel verbose prints npm's "oidc" lines, so a trusted-publisher mismatch is visible in the log.
+      - run: npm publish --provenance --access public --loglevel verbose
