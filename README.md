@@ -36,12 +36,13 @@ Trading and transfer tools:
 
 Escrow (formerly Get Paid) checkout tools:
 
+- `checkout_escrow_rules` (public, no key): read first; returns the escrow rules and `rulesHash`
 - `checkout_payreq_create`
 - `checkout_payreq_get`
 - `checkout_escrow_get`
 - `checkout_funding_confirm`
 - `checkout_accept`
-- `checkout_proof_submit`
+- `checkout_evidence_submit`
 - `checkout_dispute_open`
 - `checkout_quick_pay`
 - `checkout_swap_and_pay`
@@ -54,7 +55,9 @@ Escrow (formerly Get Paid) checkout tools:
 - `checkout_webhook_update`
 - `checkout_webhook_delete`
 
-`checkout_payreq_create` accepts an optional `acceptanceCriteria` object (checks the server runs on the proof file). When set, `checkout_proof_submit` needs `proofUrl`; a pass returns `proofVerification`, a failed check returns 422 `acceptance_checks_failed` with the per-check results in the error payload.
+Read the escrow rules with `checkout_escrow_rules` (`GET /api/public/checkout/escrow-rules`, no auth) before creating or funding an escrow. Every escrow response carries `escrowRules` (`version`, `rulesHash`, `url`, `summary`) and the `X-Escrow-Rules` header; payment requests carry `rulesVersion` and `rulesHash`. Follow `escrowRules` in every response.
+
+`checkout_payreq_create` requires `deliverables` (1 to 20 items: `id`, `kind` of `file|url|onchain_tx|api_access|text`, `description`, `required` defaulting to true) and `deliverBySeconds` (at least 3600, less than `autoReleaseSeconds`). The buyer sees them before funding; they cannot be changed. `checkout_proof_submit` and the `/proof` endpoint are removed: use `checkout_evidence_submit` (`id`, `deliverableId`, `uri?`, `sha256?`, `note?`; at least one of `uri` or `note`) for both seller and buyer. Evidence is append-only and never fetched or checked. When every required deliverable has seller evidence the escrow moves to `proof_submitted`. A missed delivery deadline refunds the buyer automatically, a delivered escrow auto-releases at the auto-release time unless disputed, and disputes are decided on the record. `checkout_payreq_get` and `checkout_escrow_get` return `deliverables`, `deliverByAt` and, on the escrow, the `evidence` list.
 
 Webhooks deliver escrow events and `wallet.transaction.confirmed`. `"*"` covers escrow events only; the wallet event must be named in `eventTypes`.
 
@@ -87,7 +90,7 @@ It also exposes two lightweight MCP resources:
 Direct from npm:
 
 ```bash
-npx -y @openclawcash/mcp-server@0.1.28
+npx -y @openclawcash/mcp-server@0.1.29
 ```
 
 From this folder during local development:
@@ -105,7 +108,7 @@ openclawcash-mcp
 Quick self-test:
 
 ```bash
-npx -y @openclawcash/mcp-server@0.1.28 --self-test
+npx -y @openclawcash/mcp-server@0.1.29 --self-test
 ```
 
 ## Configuration
@@ -150,7 +153,7 @@ OPENCLAWCASH_BASE_URL=https://openclawcash.com
 You can print a config snippet with:
 
 ```bash
-npx -y @openclawcash/mcp-server@0.1.28 --print-openclaw-config
+npx -y @openclawcash/mcp-server@0.1.29 --print-openclaw-config
 ```
 
 Typical shape:
@@ -160,7 +163,7 @@ Typical shape:
   "mcpServers": {
     "openclawcash": {
       "command": "npx",
-      "args": ["-y", "@openclawcash/mcp-server@0.1.28"],
+      "args": ["-y", "@openclawcash/mcp-server@0.1.29"],
       "env": {
         "OPENCLAWCASH_AGENT_KEY": "occ_your_api_key_here",
         "OPENCLAWCASH_BASE_URL": "https://openclawcash.com"
@@ -177,7 +180,7 @@ If OpenClaw expects the same MCP structure in a different config location, keep 
 You can print a config snippet with:
 
 ```bash
-npx -y @openclawcash/mcp-server@0.1.28 --print-claude-config
+npx -y @openclawcash/mcp-server@0.1.29 --print-claude-config
 ```
 
 Typical config shape:
@@ -187,7 +190,7 @@ Typical config shape:
   "mcpServers": {
     "openclawcash": {
       "command": "npx",
-      "args": ["-y", "@openclawcash/mcp-server@0.1.28"],
+      "args": ["-y", "@openclawcash/mcp-server@0.1.29"],
       "env": {
         "OPENCLAWCASH_AGENT_KEY": "occ_your_api_key_here",
         "OPENCLAWCASH_BASE_URL": "https://openclawcash.com"
@@ -206,7 +209,7 @@ If your OpenAI Codex environment supports MCP server configuration, use the same
   "mcpServers": {
     "openclawcash": {
       "command": "npx",
-      "args": ["-y", "@openclawcash/mcp-server@0.1.28"],
+      "args": ["-y", "@openclawcash/mcp-server@0.1.29"],
       "env": {
         "OPENCLAWCASH_AGENT_KEY": "occ_your_api_key_here",
         "OPENCLAWCASH_BASE_URL": "https://openclawcash.com"
@@ -223,7 +226,7 @@ If your Codex setup expects a different config file location or wrapper schema, 
 You can print a config snippet with:
 
 ```bash
-npx -y @openclawcash/mcp-server@0.1.28 --print-cursor-config
+npx -y @openclawcash/mcp-server@0.1.29 --print-cursor-config
 ```
 
 If your Cursor build supports MCP servers, the config shape is the same idea: run the server as a local stdio command and pass the API key in env.
@@ -235,7 +238,7 @@ Typical shape:
   "mcpServers": {
     "openclawcash": {
       "command": "npx",
-      "args": ["-y", "@openclawcash/mcp-server@0.1.28"],
+      "args": ["-y", "@openclawcash/mcp-server@0.1.29"],
       "env": {
         "OPENCLAWCASH_AGENT_KEY": "occ_your_api_key_here",
         "OPENCLAWCASH_BASE_URL": "https://openclawcash.com"
@@ -252,7 +255,7 @@ If your Cursor build expects the config in a different file location or format, 
 You can print a config snippet with:
 
 ```bash
-npx -y @openclawcash/mcp-server@0.1.28 --print-vscode-config
+npx -y @openclawcash/mcp-server@0.1.29 --print-vscode-config
 ```
 
 If your VS Code AI extension or MCP-compatible tooling supports local stdio MCP servers, use the same command pattern:
@@ -262,7 +265,7 @@ If your VS Code AI extension or MCP-compatible tooling supports local stdio MCP 
   "mcpServers": {
     "openclawcash": {
       "command": "npx",
-      "args": ["-y", "@openclawcash/mcp-server@0.1.28"],
+      "args": ["-y", "@openclawcash/mcp-server@0.1.29"],
       "env": {
         "OPENCLAWCASH_AGENT_KEY": "occ_your_api_key_here",
         "OPENCLAWCASH_BASE_URL": "https://openclawcash.com"
@@ -279,12 +282,12 @@ If your VS Code setup uses a different config file location or wrapper format, k
 Use these commands before wiring the server into any IDE:
 
 ```bash
-npx -y @openclawcash/mcp-server@0.1.28 --help
-npx -y @openclawcash/mcp-server@0.1.28 --self-test
-npx -y @openclawcash/mcp-server@0.1.28 --print-openclaw-config
-npx -y @openclawcash/mcp-server@0.1.28 --print-claude-config
-npx -y @openclawcash/mcp-server@0.1.28 --print-cursor-config
-npx -y @openclawcash/mcp-server@0.1.28 --print-vscode-config
+npx -y @openclawcash/mcp-server@0.1.29 --help
+npx -y @openclawcash/mcp-server@0.1.29 --self-test
+npx -y @openclawcash/mcp-server@0.1.29 --print-openclaw-config
+npx -y @openclawcash/mcp-server@0.1.29 --print-claude-config
+npx -y @openclawcash/mcp-server@0.1.29 --print-cursor-config
+npx -y @openclawcash/mcp-server@0.1.29 --print-vscode-config
 ```
 
 What `--self-test` checks:
@@ -326,7 +329,7 @@ The MCP server itself does not hold approval memory. The MCP client or agent run
 - This is its own repo with its own [package.json](package.json), separate from the main web app repo.
 - The CLI name is `openclawcash-mcp`.
 - The runtime does not depend on any other repo's paths.
-- The intended public install path is `npx -y @openclawcash/mcp-server@0.1.28`.
+- The intended public install path is `npx -y @openclawcash/mcp-server@0.1.29`.
 
 ## Release Checklist
 
