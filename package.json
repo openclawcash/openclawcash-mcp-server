@@ -1,6 +1,6 @@
 {
   "name": "@openclawcash/mcp-server",
-  "version": "0.1.27",
+  "version": "0.1.28",
   "description": "Crypto wallet for AI agents as MCP tools: Ethereum, Polygon, Base and Solana. The agent gets an API key, never a private key, and your spending limits and allowlist are checked before anything is signed. Send, swap, bridge, Polymarket and escrow payments.",
   "type": "module",
   "license": "Proprietary",

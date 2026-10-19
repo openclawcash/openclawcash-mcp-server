@@ -7,12 +7,12 @@ import { fileURLToPath } from "node:url";
 import { z } from "zod";
 
 const SERVER_NAME = "openclawcash";
-const SERVER_VERSION = "0.1.27";
+const SERVER_VERSION = "0.1.28";
 
 // Mirrors the API contract: "*" covers escrow events only, wallet events must be
 // named, and a subscription with no event types receives nothing.
 const WEBHOOK_EVENT_TYPES_HELP =
-  'Events to deliver. Escrow: escrow.accepted, escrow.funded, escrow.proof_submitted, escrow.disputed, escrow.cancelled, escrow.released, escrow.refunded, escrow.expired, escrow.failed. Wallet: wallet.transaction.confirmed. "*" means every escrow event only; wallet.transaction.confirmed must be named. Omitted or empty means no events are delivered.';
+  'Events to deliver. Escrow: escrow.accepted, escrow.funded, escrow.proof_submitted, escrow.proof_rejected, escrow.disputed, escrow.cancelled, escrow.released, escrow.refunded, escrow.expired, escrow.failed. Wallet: wallet.transaction.confirmed. "*" means every escrow event only; wallet.transaction.confirmed must be named. Omitted or empty means no events are delivered.';
 const PROTOCOL_VERSION = "2024-11-05";
 const DEFAULT_BASE_URL = "https://openclawcash.com";
 
@@ -433,6 +433,23 @@ const checkoutWalletSelectorArgsSchema = z
     message: "Provide exactly one of walletId or walletAddress.",
   });
 
+const acceptanceCheckSchema = z.discriminatedUnion("type", [
+  z.object({ type: z.literal("content_hash") }),
+  z.object({ type: z.literal("content_type"), value: z.string().trim().min(1).max(100) }),
+  z.object({ type: z.literal("min_bytes"), value: z.number().int().min(1).max(1048576) }),
+  z.object({ type: z.literal("contains_text"), value: z.string().min(1).max(200) }),
+  z.object({
+    type: z.literal("json_required_keys"),
+    value: z.array(z.string().min(1).max(100)).min(1).max(50),
+  }),
+]);
+
+const acceptanceCriteriaSchema = z.object({
+  description: z.string().trim().min(1).max(2000).optional(),
+  checks: z.array(acceptanceCheckSchema).min(1).max(10),
+  onPass: z.enum(["buyer_review", "auto_release"]).optional(),
+});
+
 const checkoutCreatePayreqArgsSchema = z
   .object({
     walletId: z.union([z.number().int().positive(), z.string().min(1)]).optional(),
@@ -442,6 +459,7 @@ const checkoutCreatePayreqArgsSchema = z
     autoReleaseSeconds: z.number().int().positive().optional(),
     disputeWindowSeconds: z.number().int().positive().optional(),
     metadata: z.record(z.unknown()).optional(),
+    acceptanceCriteria: acceptanceCriteriaSchema.optional(),
   })
   .refine((data) => [data.walletId, data.walletAddress].filter((v) => v !== undefined).length === 1, {
     message: "Provide exactly one of walletId or walletAddress.",
@@ -1128,6 +1146,31 @@ const tools = [
         autoReleaseSeconds: { type: "integer" },
         disputeWindowSeconds: { type: "integer" },
         metadata: { type: "object", additionalProperties: true },
+        acceptanceCriteria: {
+          type: "object",
+          description:
+            "Optional machine-checkable acceptance criteria the buyer sees before funding. With criteria set, checkout_proof_submit requires proofUrl; the server fetches it and runs the checks.",
+          properties: {
+            description: { type: "string" },
+            checks: {
+              type: "array",
+              minItems: 1,
+              maxItems: 10,
+              items: {
+                type: "object",
+                properties: {
+                  type: { type: "string", enum: ["content_hash", "content_type", "min_bytes", "contains_text", "json_required_keys"] },
+                  value: { description: "content_type: string prefix. min_bytes: integer. contains_text: string. json_required_keys: array of strings. Omit for content_hash." },
+                },
+                required: ["type"],
+                additionalProperties: false,
+              },
+            },
+            onPass: { type: "string", enum: ["buyer_review", "auto_release"] },
+          },
+          required: ["checks"],
+          additionalProperties: false,
+        },
       },
       required: ["amount"],
       additionalProperties: false,
@@ -1218,13 +1261,13 @@ const tools = [
   },
   {
     name: "checkout_proof_submit",
-    description: withWriteSafety("Submit checkout proof."),
+    description: withWriteSafety("Submit checkout proof. If the pay request has acceptanceCriteria, proofUrl is required: a pass returns proofVerification (and autoRelease for onPass auto_release), a fail returns 422 acceptance_checks_failed with details.verification and leaves the escrow unchanged."),
     inputSchema: {
       type: "object",
       properties: {
         id: { type: "string" },
         proofHash: { type: "string" },
-        proofUrl: { type: "string" },
+        proofUrl: { type: "string", description: "Required when the pay request has acceptanceCriteria." },
       },
       required: ["id", "proofHash"],
       additionalProperties: false,

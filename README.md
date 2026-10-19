@@ -54,6 +54,8 @@ Escrow (formerly Get Paid) checkout tools:
 - `checkout_webhook_update`
 - `checkout_webhook_delete`
 
+`checkout_payreq_create` accepts an optional `acceptanceCriteria` object (checks the server runs on the proof file). When set, `checkout_proof_submit` needs `proofUrl`; a pass returns `proofVerification`, a failed check returns 422 `acceptance_checks_failed` with the per-check results in the error payload.
+
 Webhooks deliver escrow events and `wallet.transaction.confirmed`. `"*"` covers escrow events only; the wallet event must be named in `eventTypes`.
 
 Polymarket tools:
@@ -85,7 +87,7 @@ It also exposes two lightweight MCP resources:
 Direct from npm:
 
 ```bash
-npx -y @openclawcash/mcp-server@0.1.27
+npx -y @openclawcash/mcp-server@0.1.28
 ```
 
 From this folder during local development:
@@ -103,7 +105,7 @@ openclawcash-mcp
 Quick self-test:
 
 ```bash
-npx -y @openclawcash/mcp-server@0.1.27 --self-test
+npx -y @openclawcash/mcp-server@0.1.28 --self-test
 ```
 
 ## Configuration
@@ -148,7 +150,7 @@ OPENCLAWCASH_BASE_URL=https://openclawcash.com
 You can print a config snippet with:
 
 ```bash
-npx -y @openclawcash/mcp-server@0.1.27 --print-openclaw-config
+npx -y @openclawcash/mcp-server@0.1.28 --print-openclaw-config
 ```
 
 Typical shape:
@@ -158,7 +160,7 @@ Typical shape:
   "mcpServers": {
     "openclawcash": {
       "command": "npx",
-      "args": ["-y", "@openclawcash/mcp-server@0.1.27"],
+      "args": ["-y", "@openclawcash/mcp-server@0.1.28"],
       "env": {
         "OPENCLAWCASH_AGENT_KEY": "occ_your_api_key_here",
         "OPENCLAWCASH_BASE_URL": "https://openclawcash.com"
@@ -175,7 +177,7 @@ If OpenClaw expects the same MCP structure in a different config location, keep 
 You can print a config snippet with:
 
 ```bash
-npx -y @openclawcash/mcp-server@0.1.27 --print-claude-config
+npx -y @openclawcash/mcp-server@0.1.28 --print-claude-config
 ```
 
 Typical config shape:
@@ -185,7 +187,7 @@ Typical config shape:
   "mcpServers": {
     "openclawcash": {
       "command": "npx",
-      "args": ["-y", "@openclawcash/mcp-server@0.1.27"],
+      "args": ["-y", "@openclawcash/mcp-server@0.1.28"],
       "env": {
         "OPENCLAWCASH_AGENT_KEY": "occ_your_api_key_here",
         "OPENCLAWCASH_BASE_URL": "https://openclawcash.com"
@@ -204,7 +206,7 @@ If your OpenAI Codex environment supports MCP server configuration, use the same
   "mcpServers": {
     "openclawcash": {
       "command": "npx",
-      "args": ["-y", "@openclawcash/mcp-server@0.1.27"],
+      "args": ["-y", "@openclawcash/mcp-server@0.1.28"],
       "env": {
         "OPENCLAWCASH_AGENT_KEY": "occ_your_api_key_here",
         "OPENCLAWCASH_BASE_URL": "https://openclawcash.com"
@@ -221,7 +223,7 @@ If your Codex setup expects a different config file location or wrapper schema, 
 You can print a config snippet with:
 
 ```bash
-npx -y @openclawcash/mcp-server@0.1.27 --print-cursor-config
+npx -y @openclawcash/mcp-server@0.1.28 --print-cursor-config
 ```
 
 If your Cursor build supports MCP servers, the config shape is the same idea: run the server as a local stdio command and pass the API key in env.
@@ -233,7 +235,7 @@ Typical shape:
   "mcpServers": {
     "openclawcash": {
       "command": "npx",
-      "args": ["-y", "@openclawcash/mcp-server@0.1.27"],
+      "args": ["-y", "@openclawcash/mcp-server@0.1.28"],
       "env": {
         "OPENCLAWCASH_AGENT_KEY": "occ_your_api_key_here",
         "OPENCLAWCASH_BASE_URL": "https://openclawcash.com"
@@ -250,7 +252,7 @@ If your Cursor build expects the config in a different file location or format, 
 You can print a config snippet with:
 
 ```bash
-npx -y @openclawcash/mcp-server@0.1.27 --print-vscode-config
+npx -y @openclawcash/mcp-server@0.1.28 --print-vscode-config
 ```
 
 If your VS Code AI extension or MCP-compatible tooling supports local stdio MCP servers, use the same command pattern:
@@ -260,7 +262,7 @@ If your VS Code AI extension or MCP-compatible tooling supports local stdio MCP 
   "mcpServers": {
     "openclawcash": {
       "command": "npx",
-      "args": ["-y", "@openclawcash/mcp-server@0.1.27"],
+      "args": ["-y", "@openclawcash/mcp-server@0.1.28"],
       "env": {
         "OPENCLAWCASH_AGENT_KEY": "occ_your_api_key_here",
         "OPENCLAWCASH_BASE_URL": "https://openclawcash.com"
@@ -277,12 +279,12 @@ If your VS Code setup uses a different config file location or wrapper format, k
 Use these commands before wiring the server into any IDE:
 
 ```bash
-npx -y @openclawcash/mcp-server@0.1.27 --help
-npx -y @openclawcash/mcp-server@0.1.27 --self-test
-npx -y @openclawcash/mcp-server@0.1.27 --print-openclaw-config
-npx -y @openclawcash/mcp-server@0.1.27 --print-claude-config
-npx -y @openclawcash/mcp-server@0.1.27 --print-cursor-config
-npx -y @openclawcash/mcp-server@0.1.27 --print-vscode-config
+npx -y @openclawcash/mcp-server@0.1.28 --help
+npx -y @openclawcash/mcp-server@0.1.28 --self-test
+npx -y @openclawcash/mcp-server@0.1.28 --print-openclaw-config
+npx -y @openclawcash/mcp-server@0.1.28 --print-claude-config
+npx -y @openclawcash/mcp-server@0.1.28 --print-cursor-config
+npx -y @openclawcash/mcp-server@0.1.28 --print-vscode-config
 ```
 
 What `--self-test` checks:
@@ -324,7 +326,7 @@ The MCP server itself does not hold approval memory. The MCP client or agent run
 - This is its own repo with its own [package.json](package.json), separate from the main web app repo.
 - The CLI name is `openclawcash-mcp`.
 - The runtime does not depend on any other repo's paths.
-- The intended public install path is `npx -y @openclawcash/mcp-server@0.1.27`.
+- The intended public install path is `npx -y @openclawcash/mcp-server@0.1.28`.
 
 ## Release Checklist
 
