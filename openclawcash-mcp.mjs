@@ -7,7 +7,7 @@ import { fileURLToPath } from "node:url";
 import { z } from "zod";
 
 const SERVER_NAME = "openclawcash";
-const SERVER_VERSION = "0.1.29";
+const SERVER_VERSION = "0.1.30";
 
 // Mirrors the API contract: "*" covers escrow events only, wallet events must be
 // named, and a subscription with no event types receives nothing.
@@ -377,43 +377,6 @@ const polymarketMarketSearchArgsSchema = z.object({
   query: z.string().min(2),
   limit: z.number().int().positive().max(50).optional(),
 });
-
-const yieldwolfCasinoLinkArgsSchema = z
-  .object({
-    walletId: z.union([z.number().int().positive(), z.string().min(1)]).optional(),
-    walletAddress: z.string().min(1).optional(),
-    agentName: z.string().min(1).max(64).optional(),
-    lane: z.enum(["real", "test"]).optional(),
-  })
-  .strict()
-  .refine((data) => [data.walletId, data.walletAddress].filter((v) => v !== undefined).length === 1, {
-    message: "Provide exactly one of walletId or walletAddress.",
-  });
-
-const yieldwolfCasinoUnlinkArgsSchema = z
-  .object({
-    walletId: z.union([z.number().int().positive(), z.string().min(1)]).optional(),
-    walletAddress: z.string().min(1).optional(),
-  })
-  .strict()
-  .refine((data) => [data.walletId, data.walletAddress].filter((v) => v !== undefined).length === 1, {
-    message: "Provide exactly one of walletId or walletAddress.",
-  });
-
-const yieldwolfCasinoCallArgsSchema = z
-  .object({
-    walletId: z.union([z.number().int().positive(), z.string().min(1)]).optional(),
-    walletAddress: z.string().min(1).optional(),
-    method: z.enum(["GET", "POST"]).optional(),
-    path: z.string().min(1),
-    body: z.unknown().optional(),
-    query: z.record(z.string()).optional(),
-    idempotencyKey: z.string().min(1).optional(),
-  })
-  .strict()
-  .refine((data) => [data.walletId, data.walletAddress].filter((v) => v !== undefined).length === 1, {
-    message: "Provide exactly one of walletId or walletAddress.",
-  });
 
 const checkoutEscrowIdArgsSchema = z.object({
   id: z.string().min(1),
@@ -1854,80 +1817,6 @@ const tools = [
         pathName: "/api/agent/venues/polymarket/redeem",
         body: args,
       }),
-  },
-  {
-    name: "yieldwolf_casino_link",
-    description: withWriteSafety("Bind a Solana wallet to a YieldWolf Casino account. Lane is fixed at link time: 'real' = solana-mainnet (default), 'test' = solana-devnet/testnet. The response carries `proxy_base` and a runtime `instructions` payload (skill_doc, summary, flows, responsible_play, lane_note). The raw casino API key is intentionally not returned to the agent: every casino call must go through `yieldwolf_casino_call` so OpenClawCash can enforce wallet ownership, venue scope, and audit. The linked wallet is the only allowed withdrawal destination. To switch lanes later, call yieldwolf_casino_unlink and re-link."),
-    inputSchema: {
-      type: "object",
-      properties: {
-        walletId: { oneOf: [{ type: "integer" }, { type: "string" }] },
-        walletAddress: { type: "string" },
-        agentName: { type: "string", description: "Optional agent display name registered at the casino (max 64 chars)." },
-        lane: { type: "string", enum: ["real", "test"], description: "Network lane. Defaults to 'real'." },
-      },
-      additionalProperties: false,
-    },
-    parse: (args) => yieldwolfCasinoLinkArgsSchema.parse(args ?? {}),
-    execute: async (args) =>
-      callAgentApi({
-        method: "POST",
-        pathName: "/api/agent/venues/yieldwolf-casino/link",
-        body: args,
-      }),
-  },
-  {
-    name: "yieldwolf_casino_unlink",
-    description: withWriteSafety("Clear the YieldWolf Casino binding for a linked wallet."),
-    inputSchema: {
-      type: "object",
-      properties: {
-        walletId: { oneOf: [{ type: "integer" }, { type: "string" }] },
-        walletAddress: { type: "string" },
-      },
-      additionalProperties: false,
-    },
-    parse: (args) => yieldwolfCasinoUnlinkArgsSchema.parse(args ?? {}),
-    execute: async (args) =>
-      callAgentApi({
-        method: "POST",
-        pathName: "/api/agent/venues/yieldwolf-casino/unlink",
-        body: args,
-      }),
-  },
-  {
-    name: "yieldwolf_casino_call",
-    description: withWriteSafety("Generic dispatcher for a linked YieldWolf Casino wallet. Routes through OpenClawCash's proxy so wallet ownership, venue scope (read for GET, trade for non-GET), and audit are enforced server-side. `path` is the YieldWolf upstream path (multi-segment paths accepted; e.g. 'agents/me/balance', 'transactions/history', 'games', 'games/info' for reads; 'games/play', 'transactions/withdraw', 'arena/kuhn/check' for writes). `method` defaults to GET. `body` is forwarded verbatim for non-GET calls. Pass `idempotencyKey` so the casino does not double-submit a write on retry. See https://yieldwolf.finance/SKILL.md for the full upstream surface and request shapes."),
-    inputSchema: {
-      type: "object",
-      properties: {
-        walletId: { oneOf: [{ type: "integer" }, { type: "string" }] },
-        walletAddress: { type: "string" },
-        method: { type: "string", enum: ["GET", "POST"], description: "HTTP method. Defaults to GET. Use POST for writes (play, withdraw, etc.)." },
-        path: { type: "string", description: "YieldWolf upstream path under /gw/. Multi-segment paths supported (e.g. 'agents/me/balance', 'games/play', 'arena/kuhn/check')." },
-        body: { description: "Optional JSON body, forwarded verbatim to YieldWolf for non-GET calls." },
-        query: { type: "object", additionalProperties: { type: "string" }, description: "Optional extra query params forwarded to YieldWolf (walletId is added automatically)." },
-        idempotencyKey: { type: "string", description: "Optional idempotency key forwarded as X-Idempotency-Key so the casino does not double-submit a write on retry." },
-      },
-      required: ["path"],
-      additionalProperties: false,
-    },
-    parse: (args) => yieldwolfCasinoCallArgsSchema.parse(args ?? {}),
-    execute: async (args) => {
-      const upstreamPath = String(args.path).replace(/^\/+/, "");
-      const method = (args.method || "GET").toUpperCase();
-      const walletQuery =
-        args.walletId !== undefined ? { walletId: String(args.walletId) } : { walletAddress: String(args.walletAddress) };
-      const query = { ...walletQuery, ...(args.query || {}) };
-      const extraHeaders = args.idempotencyKey ? { "X-Idempotency-Key": args.idempotencyKey } : undefined;
-      return callAgentApi({
-        method,
-        pathName: `/api/agent/venues/yieldwolf-casino/proxy/${upstreamPath}`,
-        query,
-        body: method === "GET" ? undefined : args.body,
-        extraHeaders,
-      });
-    },
   },
 ];
 
